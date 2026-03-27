@@ -57,7 +57,7 @@ public class Chip8 {
     public int fetch(char address){
 
     }
-    public void decodeAndExecute(int instuction){
+    public void decodeAndExecute(int current_opcode){
 
     }
     public void updateTimers(){
