@@ -18,9 +18,9 @@ public class Chip8 {
     VF is also used as a flag register; many instructions will set it to either 1 or 0 based on some rule,
      for example using it as a carry flag*/
 
-    byte[] memory = new byte[0x1000];
-    boolean[] display = new boolean[64*32];
-    boolean[] keypad = new boolean[0xF];
+    byte[] memory;
+    boolean[] display;
+    boolean[] keypad;
 
     boolean isRun;
     char pc;
@@ -32,14 +32,25 @@ public class Chip8 {
 
 
     public Chip8(){
-
+        initialize();
     }
 
     public void initialize(){
+        memory = new byte[0x1000];
+        display = new boolean[64*32];
+        keypad = new boolean[0xF];
 
+        delayTimer = 0;
+        soundTimer = 0;
+        pc = 0x0; //???
+
+        register = new Register();
+        stack = new Stack<>();
+        opcode = 0x0;
     }
 
     public void run(){
+        isRun = true;
 
     }
 
