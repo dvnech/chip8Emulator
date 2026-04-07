@@ -19,14 +19,15 @@ public class Chip8 {
      for example using it as a carry flag*/
 
     byte[] memory;
+    byte[] V;
+    char I;
     boolean[] display;
     boolean[] keypad;
 
     boolean isRun;
-    char pc;
+    int pc;
     byte delayTimer;
     byte soundTimer;
-    Register register;
     Stack<Character> stack;
     int opcode;
 
@@ -39,12 +40,13 @@ public class Chip8 {
         memory = new byte[0x1000];
         display = new boolean[64*32];
         keypad = new boolean[0xF];
+        V = new byte[0xF];
+        I = 0x0;
 
         delayTimer = 0;
         soundTimer = 0;
-        pc = 0x0; //???
+        pc = 0x200; //???
 
-        register = new Register();
         stack = new Stack<>();
         opcode = 0x0;
     }
@@ -54,10 +56,59 @@ public class Chip8 {
 
     }
 
-    public int fetch(char address){
-
+    public int fetch(){
+        if(pc >= memory.length) {
+            System.out.println("Memory address out of bounds");
+            return -1;
+        }
+        int instruction = (memory[pc] << 8 | memory[pc + 1]);
+        pc += 2;
+        return instruction;
     }
-    public void decodeAndExecute(int current_opcode){
+    public void decodeAndExecute(){
+        /*00E0 (clear screen)
+        1NNN (jump)
+        6XNN (set register VX)
+        7XNN (add value to register VX)
+        ANNN (set index register I)
+        DXYN (display/draw)*/
+
+        byte firstNib = (byte)(opcode >> 4*3);
+        byte X = (byte)(opcode >> 4*2 & 15);
+        byte Y = (byte)(opcode >> 4 & 15);
+        byte N = (byte)(opcode & 15);
+        byte NN = (byte)(opcode & 255);
+        char NNN = (char)(opcode & 4095);
+
+        switch(firstNib){
+
+            case 0x0:{  //Clear screen
+                clearScreen();
+                break;
+            }
+            case 0x1:{
+                pc = NNN;
+                break;
+            }
+            case 0x6:{
+                V[X] = NN;
+            }
+            case 0x7:{
+                V[X] += NN;
+                break;
+            }
+            case 0xA:{
+                I = NNN;
+                break;
+            }
+            case 0xD:{
+
+                break;
+            }
+            default:{
+                System.out.println("Unknown opcode");
+            }
+        }
 
     }
     public void updateTimers(){
@@ -71,5 +122,10 @@ public class Chip8 {
     }
     public void delay(){
 
+    }
+    public void clearScreen(){
+        for(int i = 0x0; i < display.length;i++){
+            display[i] = false;
+        }
     }
 }
