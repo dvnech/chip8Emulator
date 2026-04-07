@@ -25,6 +25,7 @@ public class Chip8 {
     boolean[] keypad;
 
     boolean isRun;
+    private boolean needsRedraw;
     int pc;
     byte delayTimer;
     byte soundTimer;
@@ -39,7 +40,9 @@ public class Chip8 {
     public void initialize(){
         memory = new byte[0x1000];
         display = new boolean[64*32];
+
         keypad = new boolean[0xF];
+        needsRedraw = false;
         V = new byte[0xF];
         I = 0x0;
 
@@ -53,6 +56,10 @@ public class Chip8 {
 
     public void run(){
         isRun = true;
+        //fetch instruction
+        //decode
+        //execute
+        //draw
 
     }
 
@@ -106,13 +113,16 @@ public class Chip8 {
                 break;
             }
             default:{
-                System.out.println("Unknown opcode");
+                System.err.println("Unknown opcode");
             }
         }
 
     }
     public void updateTimers(){
-
+        if(delayTimer > 0)
+            delayTimer--;
+        if(soundTimer > 0)
+            soundTimer--;
     }
     public void renderGraphics(){
 
@@ -128,4 +138,25 @@ public class Chip8 {
             display[i] = false;
         }
     }
+
+    public boolean[] getDisplay(){
+        return display.clone();
+    }
+
+    public void setKeyBuffer(int[] keyBuffer){
+        for(int i = 0; i < keypad.length;i++){
+            if(keyBuffer[i] <= 0)
+                keypad[i] = false;
+            else
+                keypad[i]  = true;
+        }
+    }
+
+    public boolean isNeedsRedraw(){
+        return needsRedraw;
+    }
+    public void removeRedrawFlag(){
+        needsRedraw = false;
+    }
+
 }
