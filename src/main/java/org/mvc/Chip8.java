@@ -218,7 +218,7 @@ public class Chip8 {
         }
 
         for(int i = 0x200; i < 1000;i++){
-
+            System.out.println(Integer.toHexString(i) + " " +Integer.toHexString(memory[i]) + " " + Integer.toHexString(memory[i+1]));
         }
     }
 
