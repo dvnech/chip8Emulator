@@ -13,6 +13,7 @@ public class App extends Thread
     public App(){
         chip8 = new Chip8();
         chip8.initialize();
+        chip8.loadProgram("ibm_logo.ch8");
         frame = new Chip8Frame(chip8);
     }
     public static void main( String[] args ) {

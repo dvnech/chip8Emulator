@@ -1,5 +1,7 @@
 package org.mvc;
 
+import java.io.*;
+import java.util.Arrays;
 import java.util.Stack;
 
 public class Chip8 {
@@ -43,7 +45,7 @@ public class Chip8 {
 
         keypad = new boolean[0xF];
         needsRedraw = false;
-        V = new byte[0xF];
+        V = new byte[0x10];
         I = 0x0;
 
         delayTimer = 0;
@@ -56,6 +58,8 @@ public class Chip8 {
 
     public void run(){
         isRun = true;
+        opcode = fetch();
+        decodeAndExecute();
         //fetch instruction
         //decode
         //execute
@@ -68,11 +72,12 @@ public class Chip8 {
             System.out.println("Memory address out of bounds");
             return -1;
         }
-        int instruction = (memory[pc] << 8 | memory[pc + 1]);
+        int instruction = ((memory[pc] & 0xFF) << 8) | (memory[pc + 1] & 0xFF);
         pc += 2;
         return instruction;
     }
     public void decodeAndExecute(){
+        System.out.println("executing " + Integer.toHexString(opcode));
         /*00E0 (clear screen)
         1NNN (jump)
         6XNN (set register VX)
@@ -93,27 +98,64 @@ public class Chip8 {
                 clearScreen();
                 break;
             }
-            case 0x1:{
+            case 0x1:{ //jump
                 pc = NNN;
                 break;
             }
-            case 0x6:{
+            case 0x3:{
+                if(V[X] == NN)
+                    pc += 2;
+                break;
+            }
+            case 0x6:{  //set register VX
                 V[X] = NN;
             }
-            case 0x7:{
+            case 0x7:{ //add value to VX
                 V[X] += NN;
                 break;
             }
-            case 0xA:{
+            case 0xA:{ //set index register I
                 I = NNN;
                 break;
             }
-            case 0xD:{
+            case 0xD:{ //display/draw
+
+                int byteNumber = 0x80;
+                boolean pixel;
+                boolean displayPixel;
+                char shift = 0;
+                int x = V[X] & 63;
+                int y = V[X] & 31;
+                V[0xF] = 0;
+                for(int  i = 0; i < N; i++){
+                    byte row = memory[I + N];
+                    while(byteNumber > 0){
+                        pixel = (row & byteNumber) > 0;
+                        displayPixel = display[(y*63) + x+N];
+
+                        if(pixel & displayPixel){
+                            display[(y*63) + x+N] = false;
+                            V[0xF] = 0x1;
+                        }
+                        if(pixel & !displayPixel){
+                            display[(y*63) + x+N] = true;
+                        }
+                        shift++;
+                        byteNumber = row >> shift;
+
+                    //implement display borders
+
+                    }
+
+                }
+                needsRedraw = true;
+
+
 
                 break;
             }
             default:{
-                System.err.println("Unknown opcode");
+                System.err.println("Unknown opcode" + Integer.toHexString(opcode));
             }
         }
 
@@ -134,9 +176,7 @@ public class Chip8 {
 
     }
     public void clearScreen(){
-        for(int i = 0x0; i < display.length;i++){
-            display[i] = false;
-        }
+        Arrays.fill(display, false);
     }
 
     public boolean[] getDisplay(){
@@ -157,6 +197,38 @@ public class Chip8 {
     }
     public void removeRedrawFlag(){
         needsRedraw = false;
+    }
+
+    public void loadProgram(String file) {
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(file)) {
+            if (is == null) {
+                throw new RuntimeException("Файл не найден в resources: " + file);
+            }
+
+            int b;
+            int offset = 0;
+            while ((b = is.read()) != -1) {
+                memory[0x200 + offset] = (byte) b;
+                offset++;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+
+        for(int i = 0x200; i < 1000;i++){
+
+        }
+    }
+
+    /**
+     * Loads the fontset into the memory
+     */
+    public void loadFontset() {
+        for(int i = 0; i < ChipData.fontset.length; i++) {
+            memory[0x50 + i] = (byte)(ChipData.fontset[i] & 0xFF);
+        }
     }
 
 }
