@@ -20,9 +20,9 @@ public class Chip8 {
     VF is also used as a flag register; many instructions will set it to either 1 or 0 based on some rule,
      for example using it as a carry flag*/
 
-    byte[] memory;
-    byte[] V;
-    char I;
+    char[] memory;
+    int[] V;
+    int I;
     boolean[] display;
     boolean[] keypad;
 
@@ -40,12 +40,15 @@ public class Chip8 {
     }
 
     public void initialize(){
-        memory = new byte[0x1000];
+        memory = new char[0x1000];
+        for(int i = 0; i < 0x1000; i++){
+            memory[i] = 0x0;
+        }
         display = new boolean[64*32];
 
         keypad = new boolean[0xF];
         needsRedraw = false;
-        V = new byte[0x10];
+        V = new int[0x10];
         I = 0x0;
 
         delayTimer = 0;
@@ -77,7 +80,6 @@ public class Chip8 {
         return instruction;
     }
     public void decodeAndExecute(){
-        System.out.println("executing " + Integer.toHexString(opcode));
         /*00E0 (clear screen)
         1NNN (jump)
         6XNN (set register VX)
@@ -85,12 +87,12 @@ public class Chip8 {
         ANNN (set index register I)
         DXYN (display/draw)*/
 
-        byte firstNib = (byte)(opcode >> 4*3);
-        byte X = (byte)(opcode >> 4*2 & 15);
-        byte Y = (byte)(opcode >> 4 & 15);
-        byte N = (byte)(opcode & 15);
-        byte NN = (byte)(opcode & 255);
-        char NNN = (char)(opcode & 4095);
+        int firstNib = (opcode >> 4*3);
+        int X = (opcode >> 4*2 & 15);
+        int Y = (opcode >> 4 & 15);
+        int N = (opcode & 15);
+        int NN = (opcode & 255);
+        int NNN = (opcode & 0xFFF);
 
         switch(firstNib){
 
@@ -109,6 +111,7 @@ public class Chip8 {
             }
             case 0x6:{  //set register VX
                 V[X] = NN;
+                break;
             }
             case 0x7:{ //add value to VX
                 V[X] += NN;
@@ -120,38 +123,29 @@ public class Chip8 {
             }
             case 0xD:{ //display/draw
 
-                int byteNumber = 0x80;
-                boolean pixel;
-                boolean displayPixel;
-                char shift = 0;
                 int x = V[X] & 63;
-                int y = V[X] & 31;
+                int y = V[Y] & 31;
+                int height = N;
+
                 V[0xF] = 0;
-                for(int  i = 0; i < N; i++){
-                    byte row = memory[I + N];
-                    while(byteNumber > 0){
-                        pixel = (row & byteNumber) > 0;
-                        displayPixel = display[(y*63) + x+N];
+                System.out.println("drawing at " + x + " " + y);
+                for(int _y = 0; _y < height; _y++) {
+                    int line = memory[I + _y];
+                    for(int _x = 0; _x < 8; _x++) {
+                        int pixel = line & (0x80 >> _x);
+                        if(pixel != 0) {
+                            int totalX = (x + _x)%64;
+                            int totalY = (y + _y)%32;
+                            int index = (totalY * 64) + totalX;
 
-                        if(pixel & displayPixel){
-                            display[(y*63) + x+N] = false;
-                            V[0xF] = 0x1;
+                            if(display[index] == true)
+                                V[0xF] = 1;
+
+                            display[index] ^= true;
                         }
-                        if(pixel & !displayPixel){
-                            display[(y*63) + x+N] = true;
-                        }
-                        shift++;
-                        byteNumber = row >> shift;
-
-                    //implement display borders
-
                     }
-
                 }
                 needsRedraw = true;
-
-
-
                 break;
             }
             default:{
@@ -180,7 +174,7 @@ public class Chip8 {
     }
 
     public boolean[] getDisplay(){
-        return display.clone();
+        return display;
     }
 
     public void setKeyBuffer(int[] keyBuffer){
@@ -208,7 +202,7 @@ public class Chip8 {
             int b;
             int offset = 0;
             while ((b = is.read()) != -1) {
-                memory[0x200 + offset] = (byte) b;
+                memory[0x200 + offset] = (char) b;
                 offset++;
             }
 
@@ -217,9 +211,7 @@ public class Chip8 {
             System.exit(0);
         }
 
-        for(int i = 0x200; i < 1000;i++){
-            System.out.println(Integer.toHexString(i) + " " +Integer.toHexString(memory[i]) + " " + Integer.toHexString(memory[i+1]));
-        }
+
     }
 
     /**
@@ -227,8 +219,11 @@ public class Chip8 {
      */
     public void loadFontset() {
         for(int i = 0; i < ChipData.fontset.length; i++) {
-            memory[0x50 + i] = (byte)(ChipData.fontset[i] & 0xFF);
+            memory[0x50 + i] = (char)(ChipData.fontset[i] & 0xFF);
         }
+    }
+    public char[] getMemoryDump(){
+        return memory;
     }
 
 }

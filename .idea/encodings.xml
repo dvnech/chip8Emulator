@@ -3,6 +3,6 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/ibm_logo.ch8" charset="UTF-16" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/ibm_logo.ch8" charset="ISO-8859-1" />
   </component>
 </project>

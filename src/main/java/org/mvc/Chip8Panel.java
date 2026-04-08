@@ -19,7 +19,7 @@ public class Chip8Panel extends JPanel {
             else
                 g.setColor(Color.BLACK);
 
-            int y = (int)(i/64);  //check that y coordinate is correct
+            int y = (int)Math.floor(i/64);  //check that y coordinate is correct
             int x = i%64;
 
             g.fillRect(x*10,y*10,10,10);
