@@ -2,6 +2,7 @@ package org.mvc;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.Stack;
 
 public class Chip8 {
@@ -31,7 +32,7 @@ public class Chip8 {
     int pc;
     byte delayTimer;
     byte soundTimer;
-    Stack<Character> stack;
+    Stack<Integer> stack;
     int opcode;
 
 
@@ -96,11 +97,20 @@ public class Chip8 {
 
         switch(firstNib){
 
-            case 0x0:{  //Clear screen
-                clearScreen();
+            case 0x0:{
+                    if(NNN == 0x0E0)//Clear screen
+                        clearScreen();
+                    else if(NNN == 0x0EE){
+                        pc = stack.pop();
+                    }
                 break;
             }
             case 0x1:{ //jump
+                pc = NNN;
+                break;
+            }
+            case 0x2:{
+                stack.add(pc);
                 pc = NNN;
                 break;
             }
@@ -109,16 +119,81 @@ public class Chip8 {
                     pc += 2;
                 break;
             }
+            case 0x4:{
+                if(V[X] != NN)
+                    pc += 2;
+                break;
+            }
+            case 0x5:{
+                if(V[X] == V[Y])
+                    pc += 2;
+                break;
+            }
             case 0x6:{  //set register VX
                 V[X] = NN;
                 break;
             }
             case 0x7:{ //add value to VX
-                V[X] += NN;
+                V[X] = (V[X] + NN) & 0xFF;
+                break;
+            }
+            case 0x8:{
+                if(N == 0x0){
+                    V[X] = V[Y];
+                }
+                else if(N == 0x1){
+                    V[X] = V[X] | V[Y];
+                }
+                else if(N == 0x2){
+                    V[X] = V[X] & V[Y];
+                }
+                else if(N == 0x3){
+                    V[X] = V[X] ^ V[Y];
+                }
+                else if(N == 0x4){
+                    int sum  = V[X] + V[Y];
+                    V[0xF] = (sum > 255) ? 1 : 0;
+                    V[X] = sum & 0xFF;
+                }
+                else if(N == 0x5){
+                    V[0xF] = (V[X] >= V[Y]) ? 1 : 0;
+                    V[X] = (V[X] - V[Y]) & 0xFF;
+                }
+                else if(N == 0x6){
+                    V[0xF] = V[X] & 0x1;
+                    V[X] = (V[X] >> 1) & 0xFF;
+                }
+                else if(N == 0x7){
+                    V[0xF] = (V[Y] >= V[X]) ? 1 : 0;
+                    V[X] = (V[Y] - V[X]) & 0xFF;
+                }
+                else if(N == 0xE){
+                    V[0xF] = V[X] & 0x80;
+                    V[X] = (V[X] << 1) & 0xFF;
+                }
+
+                break;
+            }
+            case 0x9:{
+                if(V[X] != V[Y])
+                    pc += 2;
                 break;
             }
             case 0xA:{ //set index register I
                 I = NNN;
+                break;
+            }
+            case 0xB:{
+                pc = (NNN + (V[0x0] & 0xFF)) & 0xFFF;//CHECK IF VALUE SHOULD BE TAKEN FROM V[0] OR V[X]
+                break;
+            }
+            case 0xC:{
+                Random random = new Random();
+                int min = 0;
+                int max = 0xFF;
+                int randomNumber = (random.nextInt(max-min + 1) + min) & 0xFF;
+
+                V[X] = (NN & randomNumber) & 0xFF;
                 break;
             }
             case 0xD:{ //display/draw

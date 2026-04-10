@@ -13,7 +13,7 @@ public class App extends Thread
     public App(){
         chip8 = new Chip8();
         chip8.initialize();
-        chip8.loadProgram("1-chip8-logo.ch8");
+        chip8.loadProgram("test_opcode.ch8");
         frame = new Chip8Frame(chip8);
     }
     public static void main( String[] args ) {
@@ -31,7 +31,7 @@ public class App extends Thread
                 chip8.removeRedrawFlag();
             }
             try{
-                Thread.sleep(8);
+                Thread.sleep(16);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
