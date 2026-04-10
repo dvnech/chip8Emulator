@@ -30,8 +30,8 @@ public class Chip8 {
     boolean isRun;
     private boolean needsRedraw;
     int pc;
-    byte delayTimer;
-    byte soundTimer;
+    int delayTimer;
+    int soundTimer;
     Stack<Integer> stack;
     int opcode;
 
@@ -64,6 +64,7 @@ public class Chip8 {
         isRun = true;
         opcode = fetch();
         decodeAndExecute();
+        updateTimers();
         //fetch instruction
         //decode
         //execute
@@ -222,6 +223,47 @@ public class Chip8 {
                 }
                 needsRedraw = true;
                 break;
+            }
+
+            case 0xE:{
+                if(NN == 0x9E){
+                    if(keypad[V[X]])
+                        pc += 2;
+                }
+                else if(NN == 0xA1){
+                    if(!keypad[V[X]])
+                        pc += 2;
+                }
+                break;
+            }
+
+            case 0xF:{
+                if(NN == 0x07){
+                    V[X] = delayTimer;
+                }
+                else if(NN == 0x15){
+                    delayTimer = V[X];
+                }
+                else if(NN == 0x18){
+                    soundTimer = V[X];
+                }
+                else if(NN == 0x1E){
+                    I = (I + V[X]) & 0xFFF;
+                }
+                else if(NN == 0x0A){
+                    boolean keyPressedFlag = false;
+                    for(int i = 0; i < keypad.length;i++){
+                        if(keypad[i]){
+                            V[X] = i;
+                            keyPressedFlag = true;
+                            break;
+                        }
+                    }
+                    if(!keyPressedFlag)
+                        pc -= 2;
+                }
+                break;
+
             }
             default:{
                 System.err.println("Unknown opcode" + Integer.toHexString(opcode));
